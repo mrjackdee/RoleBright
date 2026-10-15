@@ -137,7 +137,7 @@ describe('staging MySQL adapter (mock protocol, not engine acceptance)', () => {
   });
   it('bounds pooling, disables multi-statements and requires verified TLS', () => {
     const env = { APP_ENV: 'staging', STAGING_STORAGE: 'mysql', DB_HOST: 'db.example.invalid', DB_NAME: 'rolebright_staging', DB_USER: 'synthetic', DB_PASSWORD: 'fake', DB_TLS: 'required' };
-    expect(stagingDatabaseOptions(env)).toMatchObject({ connectionLimit: 4, waitForConnections: false, multipleStatements: false, ssl: { rejectUnauthorized: true } });
+    expect(stagingDatabaseOptions(env)).toMatchObject({ connectionLimit: 4, waitForConnections: false, multipleStatements: false, ssl: { rejectUnauthorized: true, verifyIdentity: true } });
     for (const change of [{ STAGING_STORAGE: '' }, { DB_NAME: 'production' }, { DB_PASSWORD: '' }, { DB_TLS: 'false' }, { DB_PORT: '-1' }, { APP_ENV: 'production' }]) expect(() => stagingDatabaseOptions({ ...env, ...change })).toThrow();
   });
 });
