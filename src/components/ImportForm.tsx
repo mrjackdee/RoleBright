@@ -19,7 +19,7 @@ export function ImportForm() {
   }
   return <form className="form" action={submit}>
     <div className="field"><label htmlFor="url">Job posting link</label><input id="url" name="url" type="url" required placeholder="https://company.com/careers/job/..."/></div>
-    <div className="notice">Start with the job link. The app will try to fill in the details automatically. If the employer's site does not allow that, copy the missing information into the fields below.</div>
+    <div className="notice">Start with the job link. The app will try to fill in the details automatically. If the employer&apos;s site does not allow that, copy the missing information into the fields below.</div>
     <div className="field"><label htmlFor="title">Job title</label><input id="title" name="title" placeholder="Only needed if the app cannot read it from the link"/></div>
     <div className="field"><label htmlFor="company">Company</label><input id="company" name="company" placeholder="Only needed if the app cannot read it from the link"/></div>
     <div className="field"><label htmlFor="location">Location</label><input id="location" name="location" placeholder="Atlanta, GA / Dallas, TX / Remote"/></div>
