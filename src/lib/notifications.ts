@@ -6,10 +6,12 @@ import type { ApplicationPackage, Job, SearchRun } from './types';
 const TO = process.env.NOTIFICATION_EMAIL ?? 'jackdee.sync@gmail.com';
 
 export function notificationsConfigured() {
+  if (process.env.APP_ENV === 'staging') return false;
   return Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID && process.env.GOOGLE_OAUTH_CLIENT_SECRET && process.env.NOTIFICATION_EMAIL);
 }
 
 async function gmailClient() {
+  if (process.env.APP_ENV === 'staging') throw new Error('Email delivery is disabled in staging.');
   const refreshToken = await loadGoogleUserRefreshToken();
   if (!refreshToken) throw new Error('Gmail notifications are not authorized yet. Sign in with Google once to grant notification access.');
   const auth = new google.auth.OAuth2(process.env.GOOGLE_OAUTH_CLIENT_ID, process.env.GOOGLE_OAUTH_CLIENT_SECRET);

@@ -30,7 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <main className="main">{children}</main>
           <div className="mobile-nav"><Nav/></div>
         </div>
-        <Analytics />
+        {process.env.APP_ENV !== 'staging' && <Analytics />}
       </body>
     </html>
   );

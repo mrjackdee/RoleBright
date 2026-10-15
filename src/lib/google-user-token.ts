@@ -1,3 +1,4 @@
+import { assertExternalActionsAllowed } from './staging-safety';
 import 'server-only';
 import { google } from 'googleapis';
 import { Readable } from 'node:stream';
@@ -43,6 +44,7 @@ async function findTokenFile(drive: ReturnType<typeof google.drive>, root: strin
 }
 
 export async function saveGoogleUserRefreshToken(refreshToken: string, accessToken?: string) {
+  assertExternalActionsAllowed();
   const secret = process.env.APP_SESSION_SECRET;
   if (!secret) throw new Error('APP_SESSION_SECRET is not configured.');
   const root = rootId();
@@ -68,6 +70,7 @@ export async function saveGoogleUserRefreshToken(refreshToken: string, accessTok
 }
 
 export async function loadGoogleUserRefreshToken(): Promise<string | undefined> {
+  assertExternalActionsAllowed();
   if (process.env.GOOGLE_USER_REFRESH_TOKEN) return process.env.GOOGLE_USER_REFRESH_TOKEN;
   const secret = process.env.APP_SESSION_SECRET;
   if (!secret) return undefined;

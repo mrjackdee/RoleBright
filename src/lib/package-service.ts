@@ -1,3 +1,4 @@
+import { assertExternalActionsAllowed } from './staging-safety';
 import 'server-only';
 import { nanoid } from 'nanoid';
 import type { Analysis, ApplicationPackage, CoverLetterContent, Job } from './types';
@@ -36,6 +37,7 @@ function qa(job: Job, resume: { candidateName?: string; summary?: string; sectio
 }
 
 export async function prepareApplication(jobId: string, forceNewVersion = false): Promise<ApplicationPackage> {
+  assertExternalActionsAllowed();
   const state = await getState();
   const job = state.jobs.find(j => j.id === jobId);
   if (!job) throw new Error('Job not found.');
