@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'sw
 const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'Jack Dee Job Search Command Center',
+  title: 'RoleBright™',
   description: 'Personal career operating system for job discovery, fit analysis, ATS optimization and application tracking.'
 };
 
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <main className="main">{children}</main>
           <div className="mobile-nav"><Nav/></div>
         </div>
-        <Analytics />
+        {process.env.APP_ENV !== 'staging' && <Analytics />}
       </body>
     </html>
   );

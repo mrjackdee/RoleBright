@@ -1,9 +1,13 @@
+import { assertExternalActionsAllowed } from '../staging-safety';
 import 'server-only';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import type { Analysis, CareerEvidenceProfile, CoverLetterContent, Job, TailoredResumeContent } from '../types';
 
-const model = () => process.env.AI_MODEL || 'openai/gpt-5.6-sol';
+const model = () => {
+  assertExternalActionsAllowed();
+  return process.env.AI_MODEL || 'openai/gpt-5.6-sol';
+};
 const gatewayOptions = { gateway: { zeroDataRetention: true, tags: ['app:jackdee-job-search'] } } as any;
 
 const careerProfileSchema = z.object({

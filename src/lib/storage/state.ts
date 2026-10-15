@@ -2,6 +2,7 @@ import 'server-only';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createDefaultState } from '../default-state';
+import { createStagingState } from '../staging-state';
 import type { AppState } from '../types';
 import { findFileByName, googleConfigured, uploadBuffer, downloadFile } from './google';
 
@@ -9,7 +10,7 @@ const STATE_FILE = '.jackdee-job-search-state.json';
 const localPath = path.join(process.cwd(), 'data', 'state.json');
 
 function shouldUseLocalStorage(): boolean {
-  return process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' || process.env.USE_LOCAL_STATE === 'true';
+  return process.env.APP_ENV === 'staging' || process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' || process.env.USE_LOCAL_STATE === 'true';
 }
 
 export class StorageNotConfiguredError extends Error {}
@@ -19,7 +20,7 @@ async function readLocal(): Promise<AppState> {
     const raw = await fs.readFile(localPath, 'utf8');
     return JSON.parse(raw) as AppState;
   } catch {
-    const state = createDefaultState();
+    const state = process.env.APP_ENV === 'staging' ? createStagingState() : createDefaultState();
     await fs.mkdir(path.dirname(localPath), { recursive: true });
     await fs.writeFile(localPath, JSON.stringify(state, null, 2));
     return state;

@@ -61,6 +61,7 @@ function parseJobPosting(html: string, url: string): Partial<Job> {
 }
 
 export async function POST(request: NextRequest) {
+  if (process.env.APP_ENV === 'staging') return NextResponse.json({ error: 'External job imports are disabled in staging.' }, { status: 503 });
   try {
     const body = await request.json();
     let partial: Partial<Job> = {};
