@@ -1,3 +1,4 @@
+import { assertExternalActionsAllowed } from '../staging-safety';
 import * as cheerio from 'cheerio';
 import { nanoid } from 'nanoid';
 import type { Job, SearchLane, WorkArrangement } from '../types';
@@ -179,6 +180,7 @@ function relativePostedDate(value?: string): string | undefined {
 }
 
 export async function verifyListing(job: Job): Promise<Job> {
+  assertExternalActionsAllowed();
   if (!job.applicationUrl.startsWith('http')) return { ...job, active: false, verificationStatus: 'INACTIVE', lastVerifiedDate: new Date().toISOString() };
   try {
     const response = await fetch(job.applicationUrl, {
@@ -213,6 +215,7 @@ export function defaultSources(): JobSource[] {
 }
 
 export async function discoverAll(): Promise<{ jobs: Job[]; errors: string[] }> {
+  assertExternalActionsAllowed();
   const jobs: Job[] = [];
   const errors: string[] = [];
 

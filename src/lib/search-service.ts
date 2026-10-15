@@ -1,3 +1,4 @@
+import { assertExternalActionsAllowed } from './staging-safety';
 import 'server-only';
 import { nanoid } from 'nanoid';
 import { discoverAll, verifyListing } from './job-sources';
@@ -19,6 +20,7 @@ function chooseCanonical(a: Job, b: Job): Job {
 }
 
 export async function runSearch(trigger: SearchRun['trigger']): Promise<SearchRun> {
+  assertExternalActionsAllowed();
   const run: SearchRun = { id: nanoid(), startedAt: new Date().toISOString(), trigger, discovered: 0, qualified: 0, excluded: 0, inactive: 0, duplicates: 0, errors: [] };
   const { jobs: discovered, errors } = await discoverAll();
   run.errors.push(...errors);
