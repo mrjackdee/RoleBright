@@ -1,2 +1,2 @@
 import { ImportForm } from '@/components/ImportForm';
-export default function ImportPage() { return <><section className="hero"><div className="eyebrow">Add a job you found</div><h1>Bring a specific job into your workspace.</h1><p>Paste the employer's job link. The app will read what it can, compare the role with your Career Profile, and add it to your job matches for review.</p></section><ImportForm/></>; }
+export default function ImportPage() { return <><section className="hero"><div className="eyebrow">Add a job you found</div><h1>Bring a specific job into your workspace.</h1><p>Paste the employer&apos;s job link. The app will read what it can, compare the role with your Career Profile, and add it to your job matches for review.</p></section><ImportForm/></>; }
