@@ -7,6 +7,7 @@ export function createStagingState(): AppState {
   const state = createDefaultState();
   const now = new Date().toISOString();
   state.notificationsEnabled = false;
+  state.settings.fitThreshold = 0; // Show every synthetic example regardless of its calculated score.
   state.careerProfile = {
     generatedAt: now, candidateName: 'Synthetic Test Candidate', headline: 'Fictional program manager for staging tests',
     yearsExperience: 8, evidence: [{ id: 'synthetic-evidence', type: 'SKILL', label: 'Program management', detail: 'Fictional test experience; not a real person.', confidence: 1 }],

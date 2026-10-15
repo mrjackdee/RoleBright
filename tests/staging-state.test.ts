@@ -6,6 +6,7 @@ describe('synthetic staging fixtures', () => {
     const state = createStagingState();
     expect(state.jobs).toHaveLength(2);
     expect(state.analyses).toHaveLength(2);
+    expect(state.analyses.every(analysis => analysis.overallFitScore >= state.settings.fitThreshold)).toBe(true);
     expect(state.applications).toHaveLength(1);
     expect(state.careerProfile?.candidateName).toBe('Synthetic Test Candidate');
     expect(state.careerProfile?.sourceFileIds).toEqual([]);
