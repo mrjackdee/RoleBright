@@ -3,6 +3,9 @@ import { validSessionToken } from '@/lib/auth';
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  if (process.env.APP_ENV === 'staging' && (pathname.startsWith('/api/cron') || pathname.startsWith('/api/auth/google'))) {
+    return NextResponse.json({ error: 'This integration is disabled in isolated staging.' }, { status: 503 });
+  }
   if (pathname.startsWith('/_next') || pathname === '/favicon.ico' || pathname === '/login' || pathname.startsWith('/api/auth/google') || pathname.startsWith('/api/health') || pathname.startsWith('/api/cron')) return NextResponse.next();
   if (process.env.NODE_ENV !== 'production' && !process.env.APP_SESSION_SECRET) return NextResponse.next();
   const valid = await validSessionToken(request.cookies.get('jd_session')?.value, process.env.APP_SESSION_SECRET);

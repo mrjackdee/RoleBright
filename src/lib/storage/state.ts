@@ -9,7 +9,7 @@ const STATE_FILE = '.jackdee-job-search-state.json';
 const localPath = path.join(process.cwd(), 'data', 'state.json');
 
 function shouldUseLocalStorage(): boolean {
-  return process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' || process.env.USE_LOCAL_STATE === 'true';
+  return process.env.APP_ENV === 'staging' || process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' || process.env.USE_LOCAL_STATE === 'true';
 }
 
 export class StorageNotConfiguredError extends Error {}

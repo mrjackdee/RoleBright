@@ -4,12 +4,14 @@ import { Readable } from 'node:stream';
 import { loadGoogleUserRefreshToken } from '../google-user-token';
 
 export function googleConfigured(): boolean {
+  if (process.env.APP_ENV === 'staging') return false;
   const oauth = Boolean(process.env.GOOGLE_OAUTH_CLIENT_ID && process.env.GOOGLE_OAUTH_CLIENT_SECRET);
   const bootstrap = Boolean(process.env.GOOGLE_USER_REFRESH_TOKEN || (process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL && process.env.GOOGLE_PRIVATE_KEY));
   return Boolean(oauth && bootstrap && process.env.GOOGLE_DRIVE_ROOT_FOLDER_ID);
 }
 
 export async function googleAuth() {
+  if (process.env.APP_ENV === 'staging') throw new Error('Google Drive is disabled in isolated staging.');
   const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
   if (!clientId || !clientSecret) throw new Error('Google OAuth is not configured.');
