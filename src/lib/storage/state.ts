@@ -2,6 +2,7 @@ import 'server-only';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createDefaultState } from '../default-state';
+import { createStagingState } from '../staging-state';
 import type { AppState } from '../types';
 import { findFileByName, googleConfigured, uploadBuffer, downloadFile } from './google';
 
@@ -19,7 +20,7 @@ async function readLocal(): Promise<AppState> {
     const raw = await fs.readFile(localPath, 'utf8');
     return JSON.parse(raw) as AppState;
   } catch {
-    const state = createDefaultState();
+    const state = process.env.APP_ENV === 'staging' ? createStagingState() : createDefaultState();
     await fs.mkdir(path.dirname(localPath), { recursive: true });
     await fs.writeFile(localPath, JSON.stringify(state, null, 2));
     return state;
