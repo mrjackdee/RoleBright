@@ -21,10 +21,11 @@ beforeEach(() => {
 });
 afterEach(() => { expect(external).not.toHaveBeenCalled(); vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 describe('staging with accidentally supplied credentials', () => {
-  it('forces local state even when production mode and Drive credentials are present', async () => {
+  it('fails closed without database mode even when Drive credentials are present', async () => {
     vi.stubEnv('NODE_ENV', 'production');
     vi.stubEnv('USE_LOCAL_STATE', 'false');
-    expect((await getState()).jobs[0].id).toBe('synthetic-only');
+    vi.stubEnv('STAGING_STORAGE', '');
+    await expect(getState()).rejects.toThrow('STAGING_STORAGE=mysql');
   });
   it('blocks scheduled searches at the service boundary', async () => await expect(runSearch('MORNING')).rejects.toThrow('disabled'));
   it('blocks application preparation at the service boundary', async () => await expect(prepareApplication('synthetic-job')).rejects.toThrow('disabled'));
