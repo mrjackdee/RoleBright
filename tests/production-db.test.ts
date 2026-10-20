@@ -39,6 +39,21 @@ describe('production configuration (synthetic only)', () => {
 });
 
 describe('production adapter protocol model, not live database acceptance', () => {
+  it('waits for an in-flight initialization failure without retrying or reporting ready', async () => {
+    const { engine } = fixture(); const pool = engine.pool();
+    let reject!: (error: Error) => void;
+    const acquire = vi.spyOn(pool, 'getConnection').mockImplementationOnce(() => new Promise((_, fail) => { reject = fail; }));
+    const db = new ProductionDatabase(pool, productionTarget.database);
+    const read = expect(db.read()).rejects.toThrow('unavailable');
+    const ready = db.readiness();
+    reject(new Error('transient synthetic failure'));
+    await read;
+    expect(await ready).toEqual({ ready: false });
+    expect(await db.readiness()).toEqual({ ready: false });
+    await expect(db.update(vi.fn())).rejects.toThrow('unavailable');
+    expect(acquire).toHaveBeenCalledTimes(1);
+    expect(engine.calls).toEqual([]);
+  });
   it('reads and checks readiness using only SELECT, preserving unknown fields', async () => {
     const { db, engine } = fixture();
     expect(await db.readiness()).toEqual({ ready: true });
@@ -54,7 +69,10 @@ describe('production adapter protocol model, not live database acceptance', () =
     engine.applied.push(...migrations);
     expect(await db.readiness()).toEqual({ ready: false });
     engine.seed(createStagingState());
-    expect(await db.readiness()).toEqual({ ready: true });
+    expect(await db.readiness()).toEqual({ ready: false });
+    const restarted = new ProductionDatabase(engine.pool(), productionTarget.database);
+    expect(await restarted.readiness()).toEqual({ ready: true });
+    await expect(restarted.read()).resolves.toBeTruthy();
     expect(engine.calls.every(sql => sql.startsWith('SELECT'))).toBe(true);
     // A failed application initialization stays failed until a new instance/process.
     await expect(db.read()).rejects.toThrow('schema');

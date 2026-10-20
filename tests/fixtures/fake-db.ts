@@ -1,6 +1,9 @@
 import type { Pool } from 'mysql2/promise';
 import { vi } from 'vitest';
+import { schemaMetadata } from './schema-metadata';
 export function fakeEngine() {
+  const metadata = schemaMetadata();
+  let checksEnabled = 1;
   let document: string | undefined; let revision = 0;
   const applied: { version: number; checksum: string }[] = [];
   const calls: string[] = [];
@@ -23,6 +26,14 @@ export function fakeEngine() {
           if (sql.startsWith('SELECT RELEASE_LOCK')) { unlock?.(); unlock = undefined; return [[{ released: 1 }]]; }
           if (sql.startsWith('SELECT DATABASE()')) return [[{ database_name: 'u761630263_rb_prod', version }]];
           if (sql.startsWith('SELECT VERSION')) return [[{ version }]];
+          if (sql.includes('FROM information_schema.') && values.length === 2) {
+            const table = metadata[values[1] as keyof typeof metadata];
+            if (sql.includes('FROM information_schema.TABLES ')) return [structuredClone(table.tables)];
+            if (sql.includes('FROM information_schema.COLUMNS ')) return [structuredClone(table.columns)];
+            if (sql.includes('FROM information_schema.STATISTICS')) return [structuredClone(table.keys)];
+            if (sql.includes('FROM information_schema.TABLE_CONSTRAINTS')) return [structuredClone(table.constraints)];
+          }
+          if (sql.startsWith('SELECT @@SESSION.check_constraint_checks')) return [[{ checks_enabled: checksEnabled }]];
           if (sql.startsWith('CREATE TABLE')) return [{}];
           if (sql.startsWith('SELECT version, checksum')) return [structuredClone(applied)];
           if (sql.startsWith('INSERT INTO rolebright_migrations')) { applied.push({ version: Number(values[0]), checksum: String(values[1]) }); return [{}]; }
@@ -45,5 +56,5 @@ export function fakeEngine() {
       };
     }),
   }) as unknown as Pool;
-  return { pool, calls, applied, connections, seed: (value: unknown) => { document = JSON.stringify(value); }, corrupt: () => { document = 'not-json'; }, fail: (sql: string, once = false) => { fail = sql; failOnce = once; }, hang: (sql: string) => { hang = sql; }, version: (v: string) => { version = v; } };
+  return { pool, calls, applied, connections, metadata, checksEnabled: (value: number) => { checksEnabled = value; }, seed: (value: unknown) => { document = JSON.stringify(value); }, corrupt: () => { document = 'not-json'; }, fail: (sql: string, once = false) => { fail = sql; failOnce = once; }, hang: (sql: string) => { hang = sql; }, version: (v: string) => { version = v; } };
 }

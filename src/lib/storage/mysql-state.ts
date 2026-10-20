@@ -54,6 +54,11 @@ export abstract class MysqlState {
     }
   }
   protected abstract initialize(): Promise<void>;
+  protected async initializationUsable(): Promise<boolean> {
+    // Observe an existing attempt, including one still in flight, without starting
+    // or retrying initialization. A rejected promise remains rejected until restart.
+    try { await this.ready; return true; } catch { return false; }
+  }
   private ensureReady() {
     // Failed initialization stays failed for this instance. Never replay uncertain effects.
     return this.ready ??= this.initialize();

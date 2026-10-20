@@ -6,6 +6,7 @@ import { MysqlState } from './mysql-state';
 import { productionDatabaseOptions, productionTarget } from './production-db-config';
 import { checkProductionSchema, checkProductionTarget } from './production-db';
 import { migrations, migrationTable } from './staging-db-migrations';
+import { checkProductionTable } from './production-schema-contract';
 
 // Operator entry point only. No application module imports this file.
 // Explicit invocation applies DDL; its flag is not user approval or a grant.
@@ -27,12 +28,13 @@ class SchemaSetup extends MysqlState {
   protected async initialize(): Promise<void> { throw new DatabaseError('Schema setup is not application storage.'); }
   async apply(): Promise<void> {
     await this.connection(async sql => {
-      await checkProductionTarget(sql, this.database);
+      const maria = await checkProductionTarget(sql, this.database);
       const name = 'rolebright:' + createHash('sha256').update(this.database).digest('hex').slice(0, 40);
       const lock = await sql('SELECT GET_LOCK(?, 5) AS acquired', [name]) as { acquired: number }[];
       if (lock[0]?.acquired !== 1) throw new DatabaseError('Schema lock unavailable.');
       try {
         await sql(migrationTable);
+        await checkProductionTable(sql, this.database, 'rolebright_migrations', maria);
         const applied = await sql('SELECT version, checksum FROM rolebright_migrations ORDER BY version') as { version: number; checksum: string }[];
         for (const row of applied) {
           if (!migrations.some(m => m.version === row.version && m.checksum === row.checksum)) throw new DatabaseError('Unknown or changed schema migration.');
@@ -40,6 +42,9 @@ class SchemaSetup extends MysqlState {
         for (const migration of migrations) {
           if (applied.some(row => row.version === migration.version)) continue;
           await sql(migration.sql);
+          // IF NOT EXISTS may have found an unrelated table. Do not certify it
+          // (or interrupted DDL) until its actual columns/keys/checks match v1.
+          await checkProductionTable(sql, this.database, 'rolebright_state', maria);
           await sql('INSERT INTO rolebright_migrations (version, checksum) VALUES (?, ?)', [migration.version, migration.checksum]);
         }
         await checkProductionSchema(sql, this.database);
