@@ -2,7 +2,9 @@ import 'server-only';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createDefaultState } from '../default-state';
-import { createStagingState } from '../staging-state';
+import { stagingDatabase } from './staging-db';
+import { productionDatabase } from './production-db';
+import { productionStorageSelected } from './production-db-config';
 import type { AppState } from '../types';
 import { findFileByName, googleConfigured, uploadBuffer, downloadFile } from './google';
 
@@ -10,7 +12,7 @@ const STATE_FILE = '.jackdee-job-search-state.json';
 const localPath = path.join(process.cwd(), 'data', 'state.json');
 
 function shouldUseLocalStorage(): boolean {
-  return process.env.APP_ENV === 'staging' || process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' || process.env.USE_LOCAL_STATE === 'true';
+  return process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'development' || process.env.USE_LOCAL_STATE === 'true';
 }
 
 export class StorageNotConfiguredError extends Error {}
@@ -20,7 +22,7 @@ async function readLocal(): Promise<AppState> {
     const raw = await fs.readFile(localPath, 'utf8');
     return JSON.parse(raw) as AppState;
   } catch {
-    const state = process.env.APP_ENV === 'staging' ? createStagingState() : createDefaultState();
+    const state = createDefaultState();
     await fs.mkdir(path.dirname(localPath), { recursive: true });
     await fs.writeFile(localPath, JSON.stringify(state, null, 2));
     return state;
@@ -59,10 +61,16 @@ async function writeDrive(state: AppState): Promise<void> {
 }
 
 export async function getState(): Promise<AppState> {
+  const production = productionStorageSelected();
+  if (process.env.APP_ENV === 'staging') return stagingDatabase().read();
+  if (production) return productionDatabase().read();
   return shouldUseLocalStorage() ? readLocal() : readDrive();
 }
 
 export async function saveState(state: AppState): Promise<void> {
+  const production = productionStorageSelected();
+  if (process.env.APP_ENV === 'staging') return stagingDatabase().save(state);
+  if (production) return productionDatabase().save(state);
   state.updatedAt = new Date().toISOString();
   return shouldUseLocalStorage() ? writeLocal(state) : writeDrive(state);
 }
@@ -70,6 +78,9 @@ export async function saveState(state: AppState): Promise<void> {
 let queue: Promise<unknown> = Promise.resolve();
 
 export async function updateState<T>(mutator: (state: AppState) => Promise<T> | T): Promise<T> {
+  const production = productionStorageSelected();
+  if (process.env.APP_ENV === 'staging') return stagingDatabase().update(mutator);
+  if (production) return productionDatabase().update(mutator);
   let result!: T;
   const task = queue.then(async () => {
     const state = await getState();

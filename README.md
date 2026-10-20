@@ -27,16 +27,9 @@ The configured search windows are 7:00 AM and 4:00 PM America/New_York on weekda
 
 ## Google Drive
 
-The app uses the existing private folder structure under **Jack Dee Ultimate Job Search Tool**. Production access uses a dedicated Google service account so scheduled server-side jobs do not depend on a browser session or expose a personal OAuth token.
+Normal Drive reads/writes use the allowed owner's Google OAuth refresh token. The service account is only the encrypted-token bootstrap reader; it is not the normal document-storage identity. See src/lib/storage/google.ts and src/lib/google-user-token.ts. Configure OAuth, APP_SESSION_SECRET, ALLOWED_LOGIN_EMAIL and the required folder IDs through the approved hosting secret workflow. Never export ChatGPT connector tokens.
 
-Required setup:
-
-1. Create a Google Cloud service account with Drive API access.
-2. Share the `Jack Dee Ultimate Job Search Tool` folder with the service-account email as Editor.
-3. Set `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_PRIVATE_KEY` in Vercel.
-4. Keep the provided folder IDs in the Vercel environment variables.
-
-The ChatGPT Google Workspace connector is used during development to organize and inspect the source documents, but its private ChatGPT OAuth token is not exported into this deployed web app.
+MySQL selection changes application state persistence only. Google login, token bootstrap and document operations remain separate dependencies. See [production database gates](docs/production-database.md); an existing empty database does not make the application ready.
 
 ## AI
 
@@ -52,20 +45,13 @@ npm install
 npm run dev
 ```
 
-Use `USE_LOCAL_STATE=true` only for local development and tests. Production is designed to persist state and documents through the configured private Google Drive integration.
+Use `USE_LOCAL_STATE=true` only for local development and tests. Do not copy this local setting to production. Production retains legacy Drive state unless the reviewed MySQL opt-in is explicitly activated; documents remain in Drive.
 
 ## Production environment
 
-See `.env.example`. At minimum configure:
+Use .env.example as a variable reference, not a production configuration to copy. Authentication uses APP_SESSION_SECRET, ALLOWED_LOGIN_EMAIL, GOOGLE_OAUTH_CLIENT_ID and GOOGLE_OAUTH_CLIENT_SECRET. Drive additionally needs the owner refresh-token/bootstrap configuration and folder IDs. Provider/search/schedule settings are separate capabilities and must not be enabled merely to test storage.
 
-- `APP_ACCESS_CODE`
-- `APP_SESSION_SECRET`
-- Google service-account variables and folder IDs
-- `CRON_SECRET`
-- `JOB_SEARCH_APP_URL`
-- `SERPAPI_KEY` for broad Google Jobs discovery
-
-Vercel AI Gateway should be enabled for the project. On Vercel, OIDC can authenticate AI Gateway automatically.
+Hosting follows the release flow in CONTRIBUTING.md. The production MySQL adapter is off by default; read docs/production-database.md before changing its settings. Keep staging APP_ENV=staging at build and runtime, and never apply it to production.
 
 ## GitHub Actions secrets
 
