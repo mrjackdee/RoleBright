@@ -3,6 +3,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { createDefaultState } from '../default-state';
 import { stagingDatabase } from './staging-db';
+import { productionDatabase } from './production-db';
+import { productionStorageSelected } from './production-db-config';
 import type { AppState } from '../types';
 import { findFileByName, googleConfigured, uploadBuffer, downloadFile } from './google';
 
@@ -59,12 +61,16 @@ async function writeDrive(state: AppState): Promise<void> {
 }
 
 export async function getState(): Promise<AppState> {
+  const production = productionStorageSelected();
   if (process.env.APP_ENV === 'staging') return stagingDatabase().read();
+  if (production) return productionDatabase().read();
   return shouldUseLocalStorage() ? readLocal() : readDrive();
 }
 
 export async function saveState(state: AppState): Promise<void> {
+  const production = productionStorageSelected();
   if (process.env.APP_ENV === 'staging') return stagingDatabase().save(state);
+  if (production) return productionDatabase().save(state);
   state.updatedAt = new Date().toISOString();
   return shouldUseLocalStorage() ? writeLocal(state) : writeDrive(state);
 }
@@ -72,7 +78,9 @@ export async function saveState(state: AppState): Promise<void> {
 let queue: Promise<unknown> = Promise.resolve();
 
 export async function updateState<T>(mutator: (state: AppState) => Promise<T> | T): Promise<T> {
+  const production = productionStorageSelected();
   if (process.env.APP_ENV === 'staging') return stagingDatabase().update(mutator);
+  if (production) return productionDatabase().update(mutator);
   let result!: T;
   const task = queue.then(async () => {
     const state = await getState();

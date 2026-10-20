@@ -1,8 +1,7 @@
 import { isIP } from 'node:net';
 import type { PoolOptions } from 'mysql2/promise';
-export class StagingDatabaseError extends Error {
-  constructor(message = 'Staging database unavailable; no fallback was attempted.') { super(message); }
-}
+import { DatabaseError as StagingDatabaseError } from './database-error';
+export { DatabaseError as StagingDatabaseError } from './database-error';
 export function stagingDatabaseOptions(env: Record<string, string | undefined> = process.env): PoolOptions {
   if (env.APP_ENV !== 'staging' || env.STAGING_STORAGE !== 'mysql') throw new StagingDatabaseError('Staging requires explicit STAGING_STORAGE=mysql configuration.');
   const host = env.DB_HOST;

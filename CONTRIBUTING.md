@@ -22,3 +22,5 @@ Synthetic-data testing is available through Cloudflare Access. Testing the Googl
 
 ## Feature flags
 Keep unfinished work out of staging releases, or add explicit feature flags defaulting off. Every change on staging is included when staging is merged into main.
+
+Production MySQL is independently opt-in through APP_ENV=production and PRODUCTION_STORAGE=mysql, with PROD_DB_* credentials isolated from staging. Its request paths never create schema or seed data. The privileged setup module is separately invoked and does not activate storage or initialize application data. See docs/production-database.md before any provisioning, readiness probe, migration or cutover. This code change alone authorizes none of those live actions.
